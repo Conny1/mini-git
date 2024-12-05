@@ -1,5 +1,10 @@
 import { Command } from "commander";
-import { initRepo, stageFile } from "./mini_git.js";
+import {
+  commitChanges,
+  commitHistory,
+  initRepo,
+  stageFile,
+} from "./mini_git.js";
 
 const program = new Command();
 // CL intro
@@ -21,7 +26,23 @@ program
   .command("add")
   .description("Stage files")
   .action(() => {
-    stageFile("/package.json"); // find a way to pich the name from the command line
+    stageFile("/index.js"); // find a way to pich the name from the command line
+  });
+
+// commit changes
+program
+  .command("commit")
+  .description("commiting staged files")
+  .action(() => {
+    commitChanges("second commit"); // find a way to pich the name from the command line
+  });
+
+// commit changes
+program
+  .command("logs")
+  .description("Logs for commits")
+  .action(() => {
+    commitHistory(); // find a way to pich the name from the command line
   });
 
 program.parse(process.argv);

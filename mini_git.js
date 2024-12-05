@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { timeStamp } from "console";
 
 // repo intitialization
 function initRepo() {
@@ -43,4 +44,69 @@ function stageFile(filepath) {
   console.log(`staged file:${filepath}`);
 }
 
-export { initRepo, stageFile };
+function commitChanges(message) {
+  let repoPath = path.join(process.cwd(), ".minigit");
+  let stagedPath = path.join(repoPath, "index");
+  let commitsPath = path.join(repoPath, "commits");
+  let headPath = path.join(repoPath, "HEAD");
+
+  // read staged files fron index
+  if (
+    !fs.existsSync(stagedPath) ||
+    fs.readFileSync(stagedPath, "utf-8").trim() === ""
+  ) {
+    console.log("Nothing to commit.Staging area is empty");
+    return;
+  }
+  let stagedContent = fs.readFileSync(stagedPath, "utf-8").split("\n");
+  let parentCommit = fs.existsSync
+    ? fs.readFileSync(headPath, "utf-8").trim()
+    : null;
+  const commitData = {
+    message,
+    parent: parentCommit,
+    timeStamp: new Date().toISOString(),
+    files: stagedContent,
+  };
+
+  let strDta = JSON.stringify(commitData, null, 2); // serialize data
+  let hash = hashFile(strDta);
+
+  // save the commit as a file
+  fs.writeFileSync(path.join(commitsPath, hash), strDta);
+
+  // update head to point to the new commit
+  fs.writeFileSync(headPath, hash);
+
+  fs.writeFileSync(stagedPath, "");
+
+  console.log("Your changes have been commited: " + hash);
+}
+
+function commitHistory() {
+  let repoPath = path.join(process.cwd(), ".minigit");
+  const commitsPath = path.join(repoPath, "commits");
+
+  // read content in the commits folder
+  const commitsDta = fs.readdirSync(commitsPath).forEach((file) => {
+    const filedata = fs
+      .readFileSync(path.join(commitsPath, file), "utf-8")
+      .trim();
+    const formatedDta = JSON.parse(filedata);
+    if (formatedDta) {
+      console.log(`Commit: ${file}`);
+      console.log(`Date: ${formatedDta.timeStamp}`);
+      console.log(`Message: ${formatedDta.message}`);
+      console.log(`Files:\n $`);
+      formatedDta?.files.forEach((item) => {
+        console.log(`- - ${item}`);
+      });
+      console.log(
+        "__________________________________________________________________________"
+      );
+    }
+    // console.log(formatedDta);
+  });
+}
+
+export { initRepo, stageFile, commitChanges, commitHistory };
