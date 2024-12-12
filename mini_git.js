@@ -26,6 +26,10 @@ function hashFile(content) {
 }
 
 function stageFile(filepath) {
+  if (!checkIgnoredFiles(filepath)) {
+    return;
+  }
+
   const fullpath = path.join(process.cwd(), filepath);
   if (!fs.existsSync(fullpath)) {
     console.log(`File not found:Path: ${filepath}`);
@@ -189,12 +193,19 @@ const brachCheckOut = (name) => {
     const brachData = fs.readFileSync(branchPath, "utf-8").trim();
     if (brachData) {
       const formatedDta = JSON.parse(brachData);
+
       if (formatedDta[name] === undefined || formatedDta[name] === null) {
         console.log("Branch not found");
         return;
+      } else if (
+        name == fs.readFileSync(headPath, "utf-8").trim().split("/").pop()
+      ) {
+        console.log("Your already in provided branch: ", name);
+        return;
+      } else {
+        fs.writeFileSync(headPath, `refs/head/${name}`);
+        console.log("current branch switched to: " + name);
       }
-      fs.writeFileSync(headPath, `refs/head/${name}`);
-      console.log("current branch: " + name);
     }
   } else {
     console.log("initialize your repo");
@@ -214,7 +225,8 @@ function mergeBranches(targetBranch) {
   const currentBranch = fs.readFileSync(headPath, "utf-8").split("/").pop();
   if (
     branches[currentBranch] === undefined ||
-    branches[currentBranch] === null
+    branches[currentBranch] === null ||
+    branches[currentBranch] === ""
   ) {
     console.log(`Current branch '${currentBranch}' has no commits.`);
     return;
@@ -291,6 +303,24 @@ function mergeBranches(targetBranch) {
 
   console.log(`Merged branch '${targetBranch}' into '${currentBranch}'.`);
   console.log(`New commit: ${mergeCommitHash}`);
+}
+
+function checkIgnoredFiles(filepath) {
+  const repoPath = path.join(process.cwd(), ".minigit");
+  if (!fs.existsSync(repoPath)) {
+    console.log("Repo not Initialized");
+    return false;
+  }
+  const ignorePath = path.join(process.cwd(), ".gitignore");
+
+  const contents = fs.readFileSync(ignorePath, "utf-8").split("\n");
+  for (let str of contents) {
+    if (str.includes(filepath)) {
+      console.log("file ignored");
+      return false;
+    }
+  }
+  return true;
 }
 
 export {

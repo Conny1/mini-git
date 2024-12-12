@@ -16,28 +16,29 @@ program
   .description("A simple version control system like git")
   .version("1.0.0");
 
-// commands
+// commands  //   eg command - node index.js init
 program
   .command("init")
   .description("intitialize a new repo")
   .action(() => {
     initRepo();
   });
-//   eg command - node index.js init
+
 // stage files
 program
-  .command("add")
+  .command("add <file>")
   .description("Stage files")
-  .action(() => {
-    stageFile("/mini_git.js"); // find a way to pich the name from the command line
+  .action((file) => {
+    console.log(file);
+    stageFile(file); // find a way to pich the name from the command line
   });
 
 // commit changes
 program
-  .command("commit")
+  .command("commit <message>")
   .description("Commiting staged files")
-  .action(() => {
-    commitChanges("first commit minigitjs"); // find a way to pich the name from the command line
+  .action((message) => {
+    commitChanges(message); // find a way to pich the name from the command line
   });
 
 //  logs
@@ -50,27 +51,27 @@ program
 
 // create new branch
 program
-  .command("branch")
+  .command("branch <name>")
   .description("Create a new branch")
-  .action(() => {
-    createBranch("conrad_dev"); // find a way to pich the name from the command line
+  .action((name) => {
+    createBranch(name); // find a way to pich the name from the command line
   });
 brachCheckOut;
 
 //  brachCheckOut
 program
-  .command("checkout")
+  .command("checkout <name>")
   .description("change the branch")
-  .action(() => {
-    brachCheckOut("main"); // find a way to pich the name from the command line
+  .action((name) => {
+    brachCheckOut(name); // find a way to pich the name from the command line
   });
 
 //  merge branches and identify conflicts
 program
-  .command("merge")
+  .command("merge <name> ")
   .description("Merge the target branch the the current branch")
-  .action(() => {
-    mergeBranches("conrad_dev"); // find a way to pich the name from the command line
+  .action((name) => {
+    mergeBranches(name); // find a way to pich the name from the command line
   });
 
 program.parse(process.argv);
