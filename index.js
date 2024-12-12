@@ -5,6 +5,7 @@ import {
   commitHistory,
   createBranch,
   initRepo,
+  mergeBranches,
   stageFile,
 } from "./mini_git.js";
 
@@ -28,7 +29,7 @@ program
   .command("add")
   .description("Stage files")
   .action(() => {
-    stageFile("/index.js"); // find a way to pich the name from the command line
+    stageFile("/mini_git.js"); // find a way to pich the name from the command line
   });
 
 // commit changes
@@ -36,10 +37,10 @@ program
   .command("commit")
   .description("Commiting staged files")
   .action(() => {
-    commitChanges("second commit"); // find a way to pich the name from the command line
+    commitChanges("first commit minigitjs"); // find a way to pich the name from the command line
   });
 
-// commit changes
+//  logs
 program
   .command("logs")
   .description("Logs for commits")
@@ -61,7 +62,15 @@ program
   .command("checkout")
   .description("change the branch")
   .action(() => {
-    brachCheckOut("conrad_dev"); // find a way to pich the name from the command line
+    brachCheckOut("main"); // find a way to pich the name from the command line
+  });
+
+//  merge branches and identify conflicts
+program
+  .command("merge")
+  .description("Merge the target branch the the current branch")
+  .action(() => {
+    mergeBranches("conrad_dev"); // find a way to pich the name from the command line
   });
 
 program.parse(process.argv);

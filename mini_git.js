@@ -201,6 +201,98 @@ const brachCheckOut = (name) => {
   }
 };
 
+function mergeBranches(targetBranch) {
+  const repoPath = path.join(process.cwd(), ".minigit");
+  const branchPath = path.join(repoPath, "refs", "branch");
+  const headPath = path.join(repoPath, "HEAD");
+
+  if (!fs.existsSync(branchPath)) {
+    console.log("No branches found. Initialize your repository.");
+    return;
+  }
+  const branches = JSON.parse(fs.readFileSync(branchPath, "utf-8").trim());
+  const currentBranch = fs.readFileSync(headPath, "utf-8").split("/").pop();
+  if (
+    branches[currentBranch] === undefined ||
+    branches[currentBranch] === null
+  ) {
+    console.log(`Current branch '${currentBranch}' has no commits.`);
+    return;
+  }
+
+  if (branches[targetBranch] === undefined || branches[targetBranch] === null) {
+    console.log(`Target branch '${targetBranch}' does not exist.`);
+    return;
+  }
+
+  const currentCommitHash = branches[currentBranch];
+  const targetCommitHash = branches[targetBranch];
+
+  const commitPath = path.join(repoPath, "commits");
+
+  const currentCommit = JSON.parse(
+    fs.readFileSync(path.join(commitPath, currentCommitHash), "utf-8")
+  );
+  const targetCommit = JSON.parse(
+    fs.readFileSync(path.join(commitPath, targetCommitHash), "utf-8")
+  );
+
+  let mergedFiles = {};
+  let conflictExists = false;
+  // merge the commits
+  currentCommit.files.forEach((line) => {
+    if (line) {
+      const [hash, filePath] = line.split(" ");
+      if (filePath !== "undefined") {
+        mergedFiles[filePath] = { hash, branch: currentBranch };
+      }
+    }
+  });
+
+  targetCommit.files.forEach((line) => {
+    if (line) {
+      const [hash, filePath] = line.split(" ");
+      if (mergedFiles[filePath] && mergedFiles[filePath].hash !== hash) {
+        conflictExists = true;
+        console.log(`Conflict detected in file: ${filePath}`);
+      } else {
+        if (filePath !== "undefined") {
+          mergedFiles[filePath] = { hash, branch: targetBranch };
+        }
+      }
+    }
+  });
+
+  if (conflictExists) {
+    console.log("Merge conflicts detected. Resolve conflicts manually.");
+    return;
+  }
+
+  // Create a new commit for the merge
+  const mergedFilesList = Object.entries(mergedFiles).map(
+    ([filePath, { hash }]) => `${hash} ${filePath}`
+  );
+  const mergeCommit = {
+    message: `Merge branch '${targetBranch}' into '${currentBranch}'`,
+    parent: [currentCommitHash, targetCommitHash],
+    timeStamp: new Date().toISOString(),
+    files: mergedFilesList,
+  };
+
+  const mergeCommitHash = hashFile(JSON.stringify(mergeCommit, null, 2));
+  fs.writeFileSync(
+    path.join(commitPath, mergeCommitHash),
+    JSON.stringify(mergeCommit, null, 2)
+  );
+
+  // Update current branch
+  branches[currentBranch] = mergeCommitHash;
+  fs.writeFileSync(branchPath, JSON.stringify(branches, null, 2));
+
+  console.log(`Merged branch '${targetBranch}' into '${currentBranch}'.`);
+  console.log(`New commit: ${mergeCommitHash}`);
+}
+
 export {
   initRepo,
   stageFile,
@@ -208,4 +300,5 @@ export {
   commitHistory,
   createBranch,
   brachCheckOut,
+  mergeBranches,
 };
