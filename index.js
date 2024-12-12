@@ -1,7 +1,9 @@
 import { Command } from "commander";
 import {
+  brachCheckOut,
   commitChanges,
   commitHistory,
+  createBranch,
   initRepo,
   stageFile,
 } from "./mini_git.js";
@@ -32,7 +34,7 @@ program
 // commit changes
 program
   .command("commit")
-  .description("commiting staged files")
+  .description("Commiting staged files")
   .action(() => {
     commitChanges("second commit"); // find a way to pich the name from the command line
   });
@@ -43,6 +45,23 @@ program
   .description("Logs for commits")
   .action(() => {
     commitHistory(); // find a way to pich the name from the command line
+  });
+
+// create new branch
+program
+  .command("branch")
+  .description("Create a new branch")
+  .action(() => {
+    createBranch("conrad_dev"); // find a way to pich the name from the command line
+  });
+brachCheckOut;
+
+//  brachCheckOut
+program
+  .command("checkout")
+  .description("change the branch")
+  .action(() => {
+    brachCheckOut("conrad_dev"); // find a way to pich the name from the command line
   });
 
 program.parse(process.argv);

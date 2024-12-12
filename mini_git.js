@@ -76,7 +76,8 @@ function commitChanges(message) {
   fs.writeFileSync(path.join(commitsPath, hash), strDta);
 
   // update head to point to the new commit
-  fs.writeFileSync(headPath, hash);
+  const brachName = parentCommit.split("/")[parentCommit.split("/").length - 1];
+  updateBranch(brachName, hash);
 
   fs.writeFileSync(stagedPath, "");
 
@@ -109,4 +110,102 @@ function commitHistory() {
   });
 }
 
-export { initRepo, stageFile, commitChanges, commitHistory };
+function updateBranch(name, commitHash) {
+  const repoPath = path.join(process.cwd(), ".minigit");
+  const branchPath = path.join(repoPath, "refs", "branch");
+  let serialized;
+  if (fs.existsSync(branchPath)) {
+    // check if there is existing data in the braches file
+    const brachData = fs.readFileSync(branchPath, "utf-8").trim();
+    if (brachData) {
+      const formatedDta = JSON.parse(brachData);
+      (formatedDta[name] = commitHash),
+        (serialized = JSON.stringify(formatedDta, null, 2));
+    } else {
+      serialized = JSON.stringify(
+        {
+          [name]: commitHash,
+        },
+        null,
+        2
+      );
+    }
+  } else {
+    serialized = JSON.stringify(
+      {
+        [name]: commitHash,
+      },
+      null,
+      2
+    );
+  }
+  fs.writeFileSync(branchPath, serialized);
+}
+
+function createBranch(name) {
+  const repoPath = path.join(process.cwd(), ".minigit");
+  const branchPath = path.join(repoPath, "refs", "branch");
+  let serialized;
+  if (fs.existsSync(branchPath)) {
+    // check if there is existing data in the braches file
+    const brachData = fs.readFileSync(branchPath, "utf-8").trim();
+    if (brachData) {
+      const formatedDta = JSON.parse(brachData);
+
+      if (formatedDta[name] || formatedDta[name] === "") {
+        console.log("Branch with that name exists");
+        return;
+      }
+      (formatedDta[name] = ""),
+        (serialized = JSON.stringify(formatedDta, null, 2));
+    } else {
+      serialized = JSON.stringify(
+        {
+          [name]: "",
+        },
+        null,
+        2
+      );
+    }
+  } else {
+    serialized = JSON.stringify(
+      {
+        [name]: "",
+      },
+      null,
+      2
+    );
+  }
+  fs.writeFileSync(branchPath, serialized);
+  console.log(`Branch ${name} has been created.`);
+}
+
+const brachCheckOut = (name) => {
+  const repoPath = path.join(process.cwd(), ".minigit");
+  const branchPath = path.join(repoPath, "refs", "branch");
+  const headPath = path.join(repoPath, "HEAD");
+  if (fs.existsSync(branchPath)) {
+    // check if there is existing data in the braches file
+    const brachData = fs.readFileSync(branchPath, "utf-8").trim();
+    if (brachData) {
+      const formatedDta = JSON.parse(brachData);
+      if (formatedDta[name] === undefined || formatedDta[name] === null) {
+        console.log("Branch not found");
+        return;
+      }
+      fs.writeFileSync(headPath, `refs/head/${name}`);
+      console.log("current branch: " + name);
+    }
+  } else {
+    console.log("initialize your repo");
+  }
+};
+
+export {
+  initRepo,
+  stageFile,
+  commitChanges,
+  commitHistory,
+  createBranch,
+  brachCheckOut,
+};
